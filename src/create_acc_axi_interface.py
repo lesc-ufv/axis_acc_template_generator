@@ -128,6 +128,7 @@ class AccAXIInterface:
         fsm_reset = m.Reg('fsm_reset', 2)
         areset = m.Reg('areset')
         ap_start_pulse = m.Reg('ap_start_pulse')
+        user_start = m.Reg('user_start')
         FSM_STATE_START = m.Localparam('FSM_STATE_START', Int(0, 2, 2))
         FSM_STATE_RESET = m.Localparam('FSM_STATE_RESET', Int(1, 2, 2))
         FSM_STATE_RUNNING = m.Localparam('FSM_STATE_RUNNING', Int(2, 2, 2))
@@ -140,7 +141,8 @@ class AccAXIInterface:
             If(reset)(
                 areset(Int(0, 1, 2)),
                 fsm_reset(FSM_STATE_START),
-                ap_start_pulse(Int(0, 1, 2))
+                ap_start_pulse(Int(0, 1, 2)),
+                user_start(Int(0, 1, 2))
             ).Else(
                 areset(Int(0, 1, 2)),
                 ap_start_pulse(Int(0, 1, 2)),
@@ -148,11 +150,13 @@ class AccAXIInterface:
                     When(FSM_STATE_START)(
                         If(ap_start)(
                             areset(Int(1, 1, 2)),
-                            fsm_reset(FSM_STATE_RESET)
+                            fsm_reset(FSM_STATE_RESET),
+                            user_start(Int(0, 1, 2))
                         )
                     ),
                     When(FSM_STATE_RESET)(
                         ap_start_pulse(Int(1, 1, 2)),
+                        user_start(Int(1, 1, 2)),
                         fsm_reset(FSM_STATE_RUNNING)
                     ),
                     When(FSM_STATE_RUNNING)(
@@ -283,7 +287,7 @@ class AccAXIInterface:
         con = [
             ('clk', ap_clk),
             ('rst', areset),
-            ('start', ap_start_pulse),
+            ('start', user_start),
             ('acc_user_done_rd_data', acc_user_done_rd_data),
             ('acc_user_done_wr_data', acc_user_done_wr_data),
             ('acc_user_request_read', acc_user_request_read),

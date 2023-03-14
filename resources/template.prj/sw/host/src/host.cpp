@@ -3,38 +3,38 @@
 
 int main(int argc, char *argv[]){
 
-    if (argc != 4) {
-        std::cout << "Usage: " << argv[0] << " <XCLBIN File> <Kernel name> <CGRA bitstream file>" << std::endl;
+    if (argc != 3) {
+        std::cout << "Usage: " << argv[0] << " <XCLBIN File> <Kernel name>" << std::endl;
         return EXIT_FAILURE;
     }
     
     std::string binaryFile = argv[1];
     std::string kernel_name = argv[2];
-    std::string bitstreamFile = argv[3];
+ 
     vector_u16 inputs[NUM_CHANNELS];
     vector_u16 outputs[NUM_CHANNELS];
     
     int size;
        
-    auto cgra_acc = CgraFpga(NUM_CHANNELS,NUM_CHANNELS);
-    cgra_acc.cgra_fpga_init(binaryFile, kernel_name, bitstreamFile);
+    auto acc = AccFpga(NUM_CHANNELS,NUM_CHANNELS);
+    acc.acc_fpga_init(binaryFile, kernel_name);
     
     for(int i = 0; i < NUM_CHANNELS;i++){
         std::stringstream ssin;
         ssin << "in" << i << ".txt";
         read_file(ssin.str(),inputs[i]);
-        cgra_acc.createInputQueue(i,inputs[i].size()*2);
-        auto ptr_in = cgra_acc.getInputQueue(i);
+        acc.createInputQueue(i,inputs[i].size()*2);
+        auto ptr_in = acc.getInputQueue(i);
         memcpy(ptr_in,inputs[i].data(),inputs[i].size()*2);
         
         std::stringstream ssout;
         ssout << "out" << i << ".txt";
         read_file(ssout.str(),outputs[i]);
-        cgra_acc.createOutputQueue(i,outputs[i].size()*2);
+        acc.createOutputQueue(i,outputs[i].size()*2);
         
     }
 
-    cgra_acc.cgra_execute();
+    acc.execute();
     
      for(int c = 0; c < NUM_CHANNELS;c++){
     
@@ -47,15 +47,15 @@ int main(int argc, char *argv[]){
 
         std::cout << std::endl << "OUT" << c << ": ";
         size = outputs[c].size();
-        auto ptr_out = (unsigned short *)cgra_acc.getOutputQueue(c);
+        auto ptr_out = (unsigned short *)acc.getOutputQueue(c);
         for (int i = 0; i < size; i++) {
             std::cout << ptr_out[i] << " ";
         }
         std::cout << std::endl;
     }
     
-    cgra_acc.print_report();
-    cgra_acc.cleanup();
+    acc.print_report();
+    acc.cleanup();
     
     return 0;
 }

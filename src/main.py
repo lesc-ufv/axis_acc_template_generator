@@ -71,6 +71,7 @@ def create_project(root_dir, name, clock, output_path, num_in, num_out, mem_type
     write_file(hw_path + 'simulate/vitis_config.txt', vitis_config)
     write_file(hw_path + 'synthesis/vitis_config.txt', vitis_config)
 
+import pathlib
 
 def main():
     args = create_args().parse_args()
@@ -80,6 +81,9 @@ def main():
 
     if args.output == '.':
         args.output = running_path
+    else:
+        args.output = "%s/%s"%(os.path.dirname(pathlib.Path(args.output).parent.resolve()), args.output)
+        
 
     create_project(root_dir, args.name, args.clock,
                    args.output, args.inputs, args.outputs, args.memory, args.size)

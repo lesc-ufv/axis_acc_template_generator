@@ -41,11 +41,11 @@ $(EXECUTABLE): check-xrt $(HOST_SRCS)
 
 .PHONY: sim	
 sim: host simconf emconfig
-	XCL_EMULATION_MODE=$(TARGET) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB_READY) $(EXECUTABLE) $(SIM_XCLBIN) $(shell cat prj_name) $(CGRA_BITSTREAM)
+	XCL_EMULATION_MODE=$(TARGET) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB_READY) $(EXECUTABLE) $(SIM_XCLBIN) $(shell cat prj_name)
 
 .PHONY: run
 run: host
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB_READY) $(EXECUTABLE) $(HW_XCLBIN) $(shell cat prj_name) $(CGRA_BITSTREAM)
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB_READY) $(EXECUTABLE) $(HW_XCLBIN) $(shell cat prj_name)
 
 .PHONY: wave 
 wave: sim
