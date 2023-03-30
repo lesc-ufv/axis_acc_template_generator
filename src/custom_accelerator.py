@@ -9,12 +9,12 @@ if not p in sys.path:
 
 
 class Accelerator(Module):
-    def __init__(self, inputs, outputs, data_width=8, axi_bus_data_width=64):
+    def __init__(self, inputs, outputs, data_width=32, axi_bus_data_width=256):
         super().__init__('m_accelerator')
         self.num_in = inputs
         self.num_out = outputs
         self.data_width = data_width
-        self.axi_bus_data_width = axi_bus_data_width
+        self.axi_bus_data_width = data_width #axi_bus_data_width
         self.__create_accelerator()
 
     def get_num_in(self):

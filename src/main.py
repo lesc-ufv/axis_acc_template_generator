@@ -20,8 +20,12 @@ def create_args():
         '-i', '--inputs', help='Number of inputs streams', type=int, default=1)
     parser.add_argument('-o', '--outputs',
                         help='Number of outputs streams', type=int, default=1)
+    
+    parser.add_argument('-w', '--dwidth',
+                        help='Data width streams', type=int, default=32)
+    
     parser.add_argument(
-        '-n', '--name', help='Name of project', type=str, default='prj')
+        '-n', '--name', help='Name of project', type=str)
     parser.add_argument(
         '-c', '--clock', help='Synthesis clock in MHz', type=int, default=250)
     parser.add_argument(
@@ -40,8 +44,8 @@ def write_file(name, string):
         fp.close()
 
 
-def create_project(root_dir, name, clock, output_path, num_in, num_out, mem_type, size):
-    acc = Accelerator(num_in, num_out)
+def create_project(root_dir, name, clock, output_path, num_in, num_out, dwidth, mem_type, size):
+    acc = Accelerator(num_in, num_out, dwidth)
     acc_axi = AccAXIInterface(acc)
 
     template_path = root_dir + '/resources/template.prj'
@@ -74,22 +78,25 @@ def create_project(root_dir, name, clock, output_path, num_in, num_out, mem_type
 import pathlib
 
 def main():
-    args = create_args().parse_args()
+    parser = create_args()
+    args = parser.parse_args()
     running_path = os.getcwd()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     root_dir = os.getcwd() + '/../'
-
+    
     if args.output == '.':
         args.output = running_path
     else:
         args.output = "%s/%s"%(os.path.dirname(pathlib.Path(args.output).parent.resolve()), args.output)
         
-
-    create_project(root_dir, args.name, args.clock,
-                   args.output, args.inputs, args.outputs, args.memory, args.size)
-
-    print('Project successfully created in %s/%s' %
+    
+    if args.name:
+        create_project(root_dir, args.name, args.clock,
+                   args.output, args.inputs, args.outputs, args.dwidth, args.memory, args.size)
+        print('Project successfully created in %s/%s' %
           (args.output, args.name))
+    else:
+        parser.print_help();
 
 
 if __name__ == '__main__':
