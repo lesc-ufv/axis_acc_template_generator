@@ -119,7 +119,7 @@ localparam integer LP_LOG_MAX_W_TO_AW            = 8; // Allow up to 256 outstan
 localparam integer LP_TOTAL_LEN_WIDTH            = C_XFER_SIZE_WIDTH-LP_LOG_DW_BYTES;
 localparam integer LP_TRANSACTION_CNTR_WIDTH     = LP_TOTAL_LEN_WIDTH-LP_LOG_BURST_LEN;
 localparam [C_M_AXI_ADDR_WIDTH-1:0] LP_ADDR_MASK = LP_DW_BYTES*LP_AXI_BURST_LEN - 1;
-localparam integer LP_FIFO_DEPTH                 = 32;
+localparam integer LP_FIFO_DEPTH                 = 64;
 localparam integer LP_FIFO_READ_LATENCY          = 1; // 2: Registered output on BRAM, 1: Registered output on LUTRAM
 localparam integer LP_FIFO_COUNT_WIDTH           = $clog2(LP_FIFO_DEPTH)+1;
 localparam integer LP_OUTSTANDING_CNTR_WIDTH     = $clog2(C_MAX_OUTSTANDING+1);
@@ -225,16 +225,17 @@ end
 
 generate
 if (C_INCLUDE_DATA_FIFO == 1) begin : gen_fifo
-
+  
+  wire prog_full;
   // xpm_fifo_sync: Synchronous FIFO
   // Xilinx Parameterized Macro, Version 2017.4
   xpm_fifo_sync # (
-    .FIFO_MEMORY_TYPE    ( "distributed"        ) , // string; "auto", "block", "distributed", or "ultra";
+    .FIFO_MEMORY_TYPE    ( "auto"        ) , // string; "auto", "block", "distributed", or "ultra";
     .ECC_MODE            ( "no_ecc"             ) , // string; "no_ecc" or "en_ecc";
     .FIFO_WRITE_DEPTH    ( LP_FIFO_DEPTH        ) , // positive integer
     .WRITE_DATA_WIDTH    ( C_M_AXI_DATA_WIDTH   ) , // positive integer
     .WR_DATA_COUNT_WIDTH ( LP_FIFO_COUNT_WIDTH  ) , // positive integer, not used
-    .PROG_FULL_THRESH    ( 10                   ) , // positive integer, not used
+    .PROG_FULL_THRESH    ( LP_FIFO_DEPTH - 5    ) , // positive integer, not used
     .FULL_RESET_VALUE    ( 1                    ) , // positive integer; 0 or 1
     .USE_ADV_FEATURES    ( "1F1F"               ) , // string; "0000" to "1F1F";
     .READ_MODE           ( "fwft"               ) , // string; "std" or "fwft";
@@ -253,7 +254,7 @@ if (C_INCLUDE_DATA_FIFO == 1) begin : gen_fifo
     .din           ( s_axis_tdata             ) ,
     .full          ( s_axis_tready_n          ) ,
     .overflow      (                          ) ,
-    .prog_full     (                          ) ,
+    .prog_full     ( prog_full                ) ,
     .wr_data_count (                          ) ,
     .almost_full   (                          ) ,
     .wr_ack        (                          ) ,
@@ -272,10 +273,24 @@ if (C_INCLUDE_DATA_FIFO == 1) begin : gen_fifo
     .sbiterr       (                          ) ,
     .dbiterr       (                          )
   );
-
-  assign s_axis_tready = ~s_axis_tready_n;
+  
+  reg stall;
+  
+  always @(posedge aclk)begin
+     if(areset)begin
+        stall <= 1;
+     end else begin
+        stall <= 1;
+        if(prog_full)begin
+          stall <= ~stall;
+        end
+     end
+  end 
+  
+  assign s_axis_tready = ~s_axis_tready_n & stall;
   assign m_axi_wvalid = m_axi_wvalid_i & w_running;
-
+  
+  
 end
 else begin : gen_no_fifo
   // Gate valid/ready signals with running so transfers don't occur before the

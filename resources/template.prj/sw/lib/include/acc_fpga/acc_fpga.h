@@ -7,7 +7,7 @@
 #include <string>
 #include <cmath>
 
-#include <accelerator/timer.h>
+#include <acc_fpga/timer.h>
 #include <xcl2/xcl2.hpp>
 
 //Timers
@@ -19,8 +19,6 @@
 
 using namespace std;
 using namespace std::chrono;
-
-typedef unsigned char byte;
 
 class AccFpga{
     
@@ -44,15 +42,15 @@ private:
   void ** m_inputs_ptr;
   void ** m_outputs_ptr;
 
-  void acc_set_args();
+  void setArgs();
   
-  void * acc_allocate_mem_align(size_t size);
+  void * allocateMemAlign(size_t size);
       
 public:
         
   AccFpga(int num_inputs, int num_outputs);  
   
-  int acc_fpga_init(std::string &binary_file, std::string kernel_name);
+  int fpgaInit(std::string &binary_file, std::string kernel_name);
   
   void createInputQueue(int input_id, size_t size);
   
@@ -66,6 +64,6 @@ public:
      
   int cleanup();
       
-  int print_report();
+  int printReport();
     
 };
